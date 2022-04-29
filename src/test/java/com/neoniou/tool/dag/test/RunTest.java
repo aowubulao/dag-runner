@@ -61,6 +61,46 @@ class RunTest {
     }
 
     @Test
+    void fucJobTest2() {
+        // 定义一个jobA，依赖的输入是x，输出是z,w，超时时间100ms
+        JobInterface dagJobA = new FunctionJobCommand((inputMap, outputMap) -> {
+            System.out.printf("a execute, inputMap: %s%n", inputMap.toString());
+            outputMap.put("z", "jobA-out-z");
+            outputMap.put("w", "jobA-out-w");
+        }, new String[]{"x"}, new String[]{"z", "w"}, 100L);
+
+        // 定义一个jobB，依赖的输入是z，输出是j，超时时间100ms
+        JobInterface dagJobB = new FunctionJobCommand((inputMap, outputMap) -> {
+            System.out.printf("b execute, inputMap: %s%n", inputMap.toString());
+            outputMap.put("j", "jobB-out-j");
+        }, new String[]{"z"}, new String[]{"j"}, 100L);
+
+        // 定义一个jobC，依赖的输入是w，输出是k，超时时间100ms
+        JobInterface dagJobC = new FunctionJobCommand((inputMap, outputMap) -> {
+            System.out.printf("c execute, inputMap: %s%n", inputMap.toString());
+            outputMap.put("k", "jobC-out-k");
+        }, new String[]{"w"}, new String[]{"j"}, 100L);
+
+        // 定义一个jobD，依赖的输入是j,k，输出是r，超时时间100ms
+        JobInterface dagJobD = new FunctionJobCommand((inputMap, outputMap) -> {
+            System.out.printf("d execute, inputMap: %s%n", inputMap.toString());
+            outputMap.put("r", "jobD-out-r");
+        }, new String[]{"j", "k"}, new String[]{"r"}, 100L);
+
+        // 执行
+        Map<String, Object> inputMap = new HashMap<>(8);
+        inputMap.put("x", "init-input-x");
+
+        DagRunner dagRunner = new DagRunner(
+                new String[]{"x"},
+                new String[]{"r"},
+                dagJobA, dagJobB, dagJobC, dagJobD);
+        Map<String, Object> resultMap = dagRunner.runJob(inputMap);
+        Assertions.assertNotNull(resultMap);
+        System.out.println(resultMap);
+    }
+
+    @Test
     void noOutputTest() {
         JobInterface dagJobA = new JobA();
         JobInterface dagJobB = new JobB();
